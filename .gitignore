@@ -1,1 +1,15 @@
-/home/fat-fighter/.gitignore
+*data*
+*.vscode*
+
+*.swp
+*.swo
+*~
+
+*.log
+*.aux
+*.bbl
+*.blg
+*.out
+
+*.pyc
+*.o

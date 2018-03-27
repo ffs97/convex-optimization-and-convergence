@@ -7,17 +7,23 @@
 \setauthor[150259]{Gurpreet Singh}{guggu@iitk.ac.in}
 \addauthor[150300]{Jaivardhan Kapoor}{jkapoor@iitk.ac.in}
 
-\newcommand{\f}[1]{f(\vx^{(#1)})}
-\newcommand{\fs}{f(\vx^\ast)}
-
-\newcommand{\gf}[1]{\nabla f(\vx^{(#1)})}
-\newcommand{\ggf}{\nabla f(\vx)}
-
 \newcommand{\x}[1]{\vx^{(#1)}}
 \newcommand{\xs}{\vx^{\ast}}
 
 \newcommand{\z}[1]{\vz^{(#1)}}
 \newcommand{\zs}{\vz^{\ast}}
+
+\newcommand{\f}[1]{f(\vx^{(#1)})}
+\newcommand{\fs}{f(\vx^\ast)}
+
+\newcommand{\fz}[1]{f(\z{#1})}
+\newcommand{\fzs}{f(\zs)}
+
+\newcommand{\gf}[1]{\nabla f(\vx^{(#1)})}
+\newcommand{\ggf}{\nabla f(\vx)}
+
+\newcommand{\gfz}[1]{\nabla \fz{#1}}
+\newcommand{\ggfz}{\nabla f(\vz)}
 
 \newcommand{\fpi}[2]{\func{\Pi_{#1}}{#2}}
 
@@ -291,7 +297,82 @@
 
 	\begin{psubsection}{Nesterov's Accelerated Gradient}
 
-		
+		For NAG, we consider the case where $f$ is convex and $\beta$-SS.
+
+		\begin{theorem}
+			\label{th:nag}
+			If $f$ is convex and $\beta$-SS, then Nesterov Accelerated Gradient satisfies
+			\begin{equation}
+				\f{T} - \fs	\qle	\frac{2 \beta \sD_0^2}{(T - 1)^2}
+				\label{eq:nag}
+			\end{equation}
+
+			\begin{proof}
+				From the $\beta$-Smoothness of the function $f$, we have
+				\begin{align}
+					\f{t+1}	&\qle	\fz{t} + \dotp{\gfz{t}}{\x{t+1} - \z{t}} + \frac{\beta}{2} \norm{\x{t+1} - \z{t}}_2^2 \nonumber \\
+					\implies \f{t+1}	&\qle	\fz{t} + \para{\frac{\beta}{2} - \frac{1}{\eta}} \norm{\x{t + 1} - \z{t}}_2^2 \label{eq:nag-beta-bound}
+				\end{align}
+
+				Using the convexity of function $f$, we can write
+				\begin{align}
+					f(\vx)	&\qge	\fz{t} + \dotp{\gfz{t}}{\vx - \z{t}} \nonumber \\
+					\implies f(\vx)	&\qge	\fz{t} + \frac{1}{\eta} \dotp{\x{t+1} - \z{t}}{\vx - \z{t}} \label{eq:nag-cvx-bound}
+				\end{align}
+
+				using equations \ref{eq:nag-beta-bound} and \ref{eq:nag-cvx-bound}, we can say
+				\begin{align}
+					\f{t + 1} - f(\vx)	\qle	\para{\frac{\beta}{2} - \frac{1}{\eta}} \norm{\x{t + 1} - \z{t}}_2^2 - \frac{1}{\eta} \dotp{\x{t+1} - \z{t}}{\vx - \z{t}}
+					\label{eq:nag-diff-bound}
+				\end{align}
+
+				We can now move on to find a bound similar to given in the theorem. First, note
+				\begin{align*}
+					\lambda_t^2 \cdot \Phi_{t + 1} - \lambda_{t - 1}^2 \cdot \Phi_{t}	&\eq	\lambda_t \cdot \para{\lambda_t \cdot \Phi_{t + 1} - \para{\lambda_t - 1} \cdot \Phi_t} \\
+					&\eq	\lambda_t \cdot \para{\f{t + 1} - \fs} + \lambda_t \cdot \para{\lambda_t - 1} \para{\f{t + 1} - \f{t}}
+				\end{align*}
+				Since $\qforall t > 0$, $\lambda_t > 1$, using equation \ref{eq:nag-diff-bound}, we can derive the following inequality
+				\begin{align*}
+					\lambda_t^2 \cdot \Phi_{t + 1} - \lambda_{t - 1}^2 \cdot \Phi_{t}	&\qle	\lambda_t^2 \cdot \para{\frac{\beta}{2} - \frac{1}{\eta}} \norm{\x{t + 1} - \z{t}}_2^2 \ + \\
+					&\hspace{2cm} + \ \frac{\lambda_t}{\eta} \cdot \dotp{\x{t+1} - \z{t}}{\xs + \para{\lambda_t - 1} \cdot \x{t} - \lambda_t \cdot \z{t}}
+				\end{align*}
+
+				Now, suppose we fix $\eta = 1 / \beta$. Therefore, we can rewrite the above inequality as
+				\begin{align*}
+					\lambda_t^2 \cdot \Phi_{t + 1} - \lambda_{t - 1}^2 \cdot \Phi_{t}	&\qle	- \frac{\beta}{2} \cdot \bigg( \norm{\lambda_t \cdot \para{\x{t + 1} - \z{t}}}_2^2 \ - \\
+					&\hspace{2cm} - \ 2 \dotp{\lambda_t \cdot \para{\x{t+1} - \z{t}}}{\xs + \para{\lambda_t - 1} \cdot \x{t} - \lambda_t \cdot \z{t}} \bigg)
+				\end{align*}
+
+				From property \hyperref[eq:dotp]{\ref*{eq:dotp}b}, where $\va = \lambda_t \cdot \para{\x{t + 1} - \z{t}}$ and $b = \xs + \para{\lambda_t - 1} \cdot \x{t} - \lambda_t \cdot \z{t}$, we can write this as
+				\begin{align}
+					\lambda_t^2 \cdot \Phi_{t + 1} - \lambda_{t - 1}^2 \cdot \Phi_{t}	&\qle	- \frac{\beta}{2} \cdot \bigg( \norm{\lambda_t \cdot \x{t + 1} - \para{\lambda_t - 1} \cdot \x{t} - \xs}_2^2 \ - \nonumber \\
+					&\hspace{3cm} - \ \norm{\lambda_t \cdot \z{t} - \para{\lambda_t - 1} \cdot \x{t} - \xs} \bigg)_2^2
+					\label{eq:nag-diff}
+				\end{align}
+
+				Now, from the definition of $\z{t + 1}$, we can write
+				\begin{align}
+					\z{t + 1}	&\eq	\x{t + 1} + \gamma_t \cdot \para{\x{t} - \x{t + 1}} \nonumber \\
+					\implies \lambda_{t + 1} \cdot \z{t + 1}	&\eq	\lambda_{t + 1} \cdot \x{t + 1} + \para{1 - \lambda_t} \cdot \para{\x{t } - \x{t + 1}} \nonumber \\
+					\implies \lambda_{t + 1} \cdot \z{t + 1} - \para{\lambda_{t + 1} - 1} \cdot \x{t + 1}	&\eq	\lambda_t \cdot \x{t + 1} - \para{\lambda_t - 1} \cdot \x{t} \label{eq:nag-us}
+				\end{align}
+
+				We can substitute the term in equation \ref{eq:nag-diff} using equation \ref{eq:nag-us}. Now, define $\vu_t = \lambda_t \cdot \z{t} - \para{\lambda_t - 1} \cdot \x{t} - \xs$. Therefore, we can write
+				\begin{align*}
+					\lambda_t^2 \cdot \Phi_{t + 1} - \lambda_{t - 1}^2 \cdot \Phi_{t}	\qle	\frac{\beta}{2} \cdot \para{\norm{\vu_t}_2^2 - \norm{\vu_{t + 1}}_2^2}
+				\end{align*}
+
+				Adding this from $t = 0, 1 \dots (T - 1)$
+				\begin{align*}
+					\lambda_{T - 1}^2 \Phi_{T}	&\qle	\frac{\beta}{2} \cdot \para{\norm{\vu_0}_2^2 - \norm{\vu_T}_2^2} + \lambda_{0}^2 \cdot \Phi_{0}	\qle	\frac{\beta}{2} \cdot \norm{\vu_0}_2^2 + \lambda_0^2 \cdot \Phi_0
+				\end{align*}
+
+				We know $\lambda_0 = 0$. Also, using induction, it is easy to see that $\qforall t \ge 2$, $\lambda_{t} > t / 2$. therefore, we have
+				\begin{align*}
+					\Phi_T	\qle	\frac{2 \beta \cdot \norm{\vu_0}_2^2}{(T - 1)^2}	\eq	\frac{2 \beta \cdot \sD_0^2}{(T - 1)^2}
+				\end{align*}
+			\end{proof}
+		\end{theorem}
 
 	\end{psubsection}<++>
 
